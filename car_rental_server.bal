@@ -9,9 +9,9 @@ service /CarRentalService on new grpc:Listener(9090) {
 
 
     map<car_rental_pb:Car> carDB = {};
-    map<string> userRoles = {}; // user_id => role
-    map<string> map<car_rental_pb:CartRequest> carts = {}; // user_id => cart items
-    map<string> map<string> reservations = {}; // user_id => map<plate => reservation info>
+    map<string> userRoles = {};
+    map<string> map<car_rental_pb:CartRequest> carts = {};
+    map<string> map<string> reservations = {}; 
 
     isolated remote function AddCar(car_rental_pb:Car car) returns car_rental_pb:CarResponse|error {
         if carDB.hasKey(car.plate) {
@@ -100,7 +100,7 @@ service /CarRentalService on new grpc:Listener(9090) {
             car_rental_pb:Car car = carDB[item.plate];
             total += car.daily_price * <float>days;
 
-            car.status = "UNAVAILABLE"; // Mark as reserved
+            car.status = "UNAVAILABLE"; 
             carDB[item.plate] = car;
         }
 
