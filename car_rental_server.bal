@@ -1,169 +1,110 @@
+import ballerina/log;
 import ballerina/grpc;
 import ballerina/time;
+import ballerina/io;
+import ballerina/lang.'string;
+import car_rental_pb;
 
-type Car record {
-    string plate;
-    string make;
-    string model;
-    int year;
-    float dailyPrice;
-    float mileage;
-    string status;
-};
+service /CarRentalService on new grpc:Listener(9090) {
 
-type User record {
-    string userId;
-    string name;
-    int role; // 0=Customer, 1=Admin
-};
 
-type RentalItem record {
-    Car car;
-    time:ReadableDate startDate;
-    time:ReadableDate endDate;
-    float price;
-};
+    map<car_rental_pb:Car> carDB = {};
+    map<string> userRoles = {}; // user_id => role
+    map<string> map<car_rental_pb:CartRequest> carts = {}; // user_id => cart items
+    map<string> map<string> reservations = {}; // user_id => map<plate => reservation info>
 
-type Reservation record {
-    string reservationId;
-    string userId;
-    RentalItem[] items;
-    float totalPrice;
-    time:ReadableDate reservationDate;
-};
-
-map<Car> cars = {};
-map<User> users = {};
-map<string, RentalItem[]> userCarts = {}; // userId -> list of rental items
-map<string, Reservation> reservations = {};
-
-service / on new grpc:Listener(9090) {
-
-    resource function create_users(stream<CreateUserRequest> reqs) returns CreateUserResponse {
-        foreach var req in reqs {
-            User user = req.user;
-            users[user.userId] = user;
+    isolated remote function AddCar(car_rental_pb:Car car) returns car_rental_pb:CarResponse|error {
+        if carDB.hasKey(car.plate) {
+            return { plate: car.plate, message: "Car already exists" };
         }
-        return { message: "Users created successfully" };
+        carDB[car.plate] = car;
+        return { plate: car.plate, message: "Car added successfully" };
     }
 
-    resource function add_car(AddCarRequest req) returns AddCarResponse {
-        Car car = req.car;
-        cars[car.plate] = car;
-        return { carId: car.plate };
-    }
-
-    resource function update_car(UpdateCarRequest req) returns UpdateCarResponse {
-        string plate = req.plate;
-        if (cars.hasKey(plate)) {
-            Car updated = req.updatedCar;
-            cars[plate] = updated;
-            return { message: "Car updated successfully" };
-        } else {
-            return { message: "Car not found" };
-        }
-    }
-
-    resource function remove_car(RemoveCarRequest req) returns RemoveCarResponse {
-        string plate = req.plate;
-        if (cars.hasKey(plate)) {
-            cars.remove(plate);
-        }
-        // Return current list
-        return { cars: cars.values() };
-    }
-
-    resource function list_available_cars(ListAvailableCarsRequest req) returns stream<CarStream> {
-        foreach var car in cars.values() {
-            if (car.status == "AVAILABLE") {
-                emit { car: car };
-            }
-        }
-    }
-
-    resource function search_car(SearchCarRequest req) returns SearchCarResponse {
-        string plate = req.plate;
-        if (cars.hasKey(plate)) {
-            return { car: cars[plate], found: true };
-        } else {
-            return { car: null, found: false };
-        }
-    }
-
-    resource function add_to_cart(AddToCartRequest req) returns AddToCartResponse {
-        string userId = req.userId;
-        if (!users.hasKey(userId)) {
-            return { message: "User not found" };
-        }
-        if (!cars.hasKey(req.plate)) {
-            return { message: "Car not found" };
-        }
-
-        Car car = cars[req.plate];
-
-        // Basic date validation
-        time:ReadableDate startDate = check time:fromString(req.period.startDate);
-        time:ReadableDate endDate = check time:fromString(req.period.endDate);
-        if (startDate > endDate) {
-            return { message: "Invalid date range" };
-        }
-
-        // Check if car is available (simplified)
-        if (car.status != "AVAILABLE") {
-            return { message: "Car not available" };
-        }
-
-        // Add to user's cart
-        RentalItem item = {
-            car: car,
-            startDate: startDate,
-            endDate: endDate,
-            price: car.dailyPrice * (float)time:dateDiff(startDate, endDate) + 1
+    isolated remote function CreateUsers(stream<car_rental_pb:User> userStream) returns car_rental_pb:UserCreationResponse|error {
+        check from car_rental_pb:User user in userStream {
+            userRoles[user.user_id] = user.role;
         };
+        return { message: "All users created successfully" };
+    }
 
-        if (!userCarts.hasKey(userId)) {
-            userCarts[userId] = [];
+    isolated remote function UpdateCar(car_rental_pb:UpdateCarRequest req) returns car_rental_pb:CarResponse|error {
+        if !carDB.hasKey(req.plate) {
+            return { plate: req.plate, message: "Car not found" };
         }
-        userCarts[userId].push(item);
+        car_rental_pb:Car car = carDB[req.plate];
+        car.daily_price = req.new_daily_price;
+        car.status = req.new_status;
+        carDB[req.plate] = car;
+        return { plate: req.plate, message: "Car updated" };
+    }
+
+    isolated remote function RemoveCar(car_rental_pb:CarIdentifier id) returns car_rental_pb:CarList|error {
+        carDB.remove(id.plate);
+        return { cars: carDB.values() };
+    }
+
+    isolated remote function ListAvailableCars(car_rental_pb:CarFilter filter) returns stream<car_rental_pb:Car, error?> {
+        return new(carDB.values().filter(function(car_rental_pb:Car c) returns boolean {
+            return c.status == "AVAILABLE" && 
+                (filter.keyword == "" || c.make.toLowerAscii().contains(filter.keyword.toLowerAscii()));
+        }));
+    }
+
+    isolated remote function SearchCar(car_rental_pb:CarIdentifier id) returns car_rental_pb:CarSearchResponse|error {
+        if !carDB.hasKey(id.plate) {
+            return { available: false };
+        }
+        car_rental_pb:Car car = carDB[id.plate];
+        return { available: car.status == "AVAILABLE", car: car };
+    }
+
+    isolated remote function AddToCart(car_rental_pb:CartRequest req) returns car_rental_pb:CartResponse|error {
+        if !carDB.hasKey(req.plate) {
+            return { message: "Car not found" };
+        }
+
+        
+        time:Utc startDate = check time:parse(req.start_date);
+        time:Utc endDate = check time:parse(req.end_date);
+
+        if startDate >= endDate {
+            return { message: "Invalid dates" };
+        }
+
+        map<car_rental_pb:CartRequest> userCart = carts[req.user_id];
+        if userCart is () {
+            userCart = {};
+        }
+        userCart[req.plate] = req;
+        carts[req.user_id] = userCart;
         return { message: "Car added to cart" };
     }
 
-    resource function place_reservation(PlaceReservationRequest req) returns PlaceReservationResponse {
-        string userId = req.userId;
-        if (!users.hasKey(userId)) {
-            return { message: "User not found" };
-        }
-        if (!userCarts.hasKey(userId)) {
-            return { message: "Cart is empty" };
-        }
-        RentalItem[] items = userCarts[userId];
-
-        float totalPrice = 0.0;
-        list<RentalItem> confirmedItems = [];
-
-        foreach var item in items {
-            // Check if car is still available for the dates
-            // For simplicity, assume always available
-            float days = (float)time:dateDiff(item.startDate, item.endDate) + 1;
-            float price = item.car.dailyPrice * days;
-            totalPrice += price;
-            confirmedItems.push(item);
-            // Optionally, change status or reserve logic
+    isolated remote function PlaceReservation(car_rental_pb:ReservationRequest req) returns car_rental_pb:ReservationResponse|error {
+        map<car_rental_pb:CartRequest> cart = carts[req.user_id];
+        if cart is () {
+            return { message: "No items in cart", total_price: 0.0 };
         }
 
-        string reservationId = "RES-" + userId + "-" + time:currentTime().toString();
-        Reservation reservation = {
-            reservationId: reservationId,
-            userId: userId,
-            items: confirmedItems.toArray(),
-            totalPrice: totalPrice,
-            reservationDate: time:currentTime()
-        };
+        float total = 0.0;
+        foreach var [_, item] in cart.entries() {
+            if !carDB.hasKey(item.plate) || carDB[item.plate].status != "AVAILABLE" {
+                return { message: "Car not available: " + item.plate, total_price: 0.0 };
+            }
 
-        reservations[reservationId] = reservation;
-        // Clear cart
-        userCarts.remove(userId);
+            time:Utc startDate = check time:parse(item.start_date);
+            time:Utc endDate = check time:parse(item.end_date);
+            int64 days = time:diffDays(startDate, endDate);
 
-        return { message: "Reservation confirmed", reservation: reservation };
+            car_rental_pb:Car car = carDB[item.plate];
+            total += car.daily_price * <float>days;
+
+            car.status = "UNAVAILABLE"; // Mark as reserved
+            carDB[item.plate] = car;
+        }
+
+        carts.remove(req.user_id);
+        return { message: "Reservation successful", total_price: total };
     }
 }
