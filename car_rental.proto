@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package carrental;
 
-// Car record
+
 message Car {
   string plate = 1;
   string make = 2;
@@ -10,17 +10,17 @@ message Car {
   int32 year = 4;
   double daily_price = 5;
   int32 mileage = 6;
-  string status = 7; // AVAILABLE or UNAVAILABLE
+  string status = 7; 
 }
 
-// User record
+
 message User {
   string id = 1;
   string name = 2;
-  string role = 3; // ADMIN or CUSTOMER
+  string role = 3; 
 }
 
-// Cart and Reservation
+
 message CartEntry {
   string plate = 1;
   string start_date = 2;
@@ -42,7 +42,7 @@ message ReservationRecord {
   string created_at = 5;
 }
 
-// Responses
+
 message CarResponse {
   string message = 1;
   Car car = 2;
@@ -67,7 +67,7 @@ message ReservationResponse {
   ReservationRecord reservation = 2;
 }
 
-// Requests
+
 message UpdateCarRequest {
   string plate = 1;
   string make = 2;
@@ -89,7 +89,7 @@ message AddToCartRequest {
 }
 message PlaceReservationRequest { string user_id = 1; }
 
-// Service
+
 service CarRentalService {
   rpc AddCar(Car) returns (CarResponse);
   rpc CreateUsers(stream User) returns (CreateUsersResponse);
