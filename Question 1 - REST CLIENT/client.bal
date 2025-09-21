@@ -11,7 +11,7 @@ public function main() returns error? {
         "assetTag": "EQ-002",
         "name": "Laser Cutter",
         "faculty": "Engineering",
-        "department": "Mechanical ",
+        "department": "Mechanical",
         "status": "ACTIVE",
         "acquiredDate": "2024-01-15",
         "components": [],
