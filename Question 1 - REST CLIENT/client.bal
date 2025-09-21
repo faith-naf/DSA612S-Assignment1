@@ -52,7 +52,7 @@ http:Response response = if operation.startsWith("POST") {
         check client->get(operation.split(" ")[1]);
     };
     
-    io:println("   Status: ", response.statusCode);
-    io:println("   Response: ", check response.getTextPayload());
+    io:println("Status:", response.statusCode);
+    io:println("Response:", check response.getTextPayload());
     io:println("");
 }
