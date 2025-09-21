@@ -10,7 +10,7 @@ public function main() returns error? {
     json newAsset = {
         "assetTag": "EQ-002",
         "name": "Laser Cutter",
-        "faculty": "Engineering",
+        "faculty": "Software Engineering",
         "department": "Mechanical",
         "status": "ACTIVE",
         "acquiredDate": "2024-01-15",
