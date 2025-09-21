@@ -11,7 +11,7 @@ message Car {
   double daily_price = 5;
   int32 mileage = 6;
   string status = 7; 
-}
+} 
 
 
 message User {
