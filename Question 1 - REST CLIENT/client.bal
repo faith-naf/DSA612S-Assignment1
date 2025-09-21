@@ -4,7 +4,7 @@ import ballerina/io;
 public function main() returns error? {
     http:Client assetClient = check new ("http://localhost:9090");
 
-    io:println("=== Test Asset Management API ===\n");
+    io:println("Test Asset Management API \n");
 
     // JSON object to test data 
     json newAsset = {
@@ -32,6 +32,19 @@ public function main() returns error? {
         "nextDueDate": "2024-09-15"
     };
 
+    // JSON object to update
+    json updatedAsset = {
+        "assetTag": "EQ-002",
+        "name": "Laser Cutter - Updated",
+        "faculty": "Software Engineering",
+        "department": "Mechanical",
+        "status": "UNDER_REPAIR",
+        "acquiredDate": "2024-01-15",
+        "components": [],
+        "schedules": [],
+        "workOrders": []
+    };
+
     // Testing service operations
     check testOperation(assetClient, "1. Create asset", "POST /assets", newAsset);
     check testOperation(assetClient, "2. Get all assets", "GET /assets", ());
@@ -40,8 +53,9 @@ public function main() returns error? {
     check testOperation(assetClient, "5. Check overdue", "GET /assets/maintenance/overdue", ());
     check testOperation(assetClient, "6. Add component", "POST /assets/EQ-002/components", newComponent);
     check testOperation(assetClient, "7. Add schedule", "POST /assets/EQ-002/schedules", newSchedule);
+    check testOperation(assetClient, "8. Update asset", "PUT /assets/EQ-002", updatedAsset);
 
-    io:println("All tests completed successfully");
+    io:println("=== All tests completed successfully ===");
 }
 
 function testOperation(http:Client client, string description, string operation, json payload) returns error? {
@@ -52,6 +66,10 @@ function testOperation(http:Client client, string description, string operation,
 
     http:Response response = if method == "POST" {
         check client->post(path, payload);
+    } else if method == "PUT" {
+        check client->put(path, payload);
+    } else if method == "DELETE" {
+        check client->delete(path);
     } else {
         check client->get(path);
     };
@@ -60,4 +78,3 @@ function testOperation(http:Client client, string description, string operation,
     io:println("Response: ", check response.getTextPayload());
     io:println("");
 }
-
