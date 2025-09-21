@@ -2,7 +2,6 @@ import ballerina/http;
 import ballerina/io;
 import ballerina/time;
 
-// Define types for our assets and related entities
 type Status "ACTIVE"|"UNDER_REPAIR"|"DISPOSED";
 
 type Component record {
@@ -37,12 +36,12 @@ type Asset record {
     WorkOrder[] workOrders?;
 };
 
-// In-memory database
+//database
 map<Asset> assetsDB = {};
 
 service / on new http:Listener(9090) {
 
-    // Create a new asset - POST /assets
+    // Create a new asset
     resource function post assets(@http:Payload json payload) returns http:Created|http:BadRequest {
         Asset|error asset = payload.cloneWithType(Asset);
         if asset is error {
@@ -60,13 +59,13 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    // Get all assets - GET /assets
+    // Get all assets
     resource function get assets() returns json {
         io:println("Getting all assets");
         return <json>assetsDB.toArray();
     }
 
-    // Get asset by tag - GET /assets/{assetTag}
+    // Get asset by tag
     resource function get assets/[string assetTag]() returns json|http:NotFound {
         io:println("Getting asset: ", assetTag);
         if !assetsDB.hasKey(assetTag) {
@@ -76,7 +75,7 @@ service / on new http:Listener(9090) {
         return <json>asset;
     }
 
-    // Get assets by faculty - GET /assets/faculty/{faculty}
+    // Get assets by faculty
     resource function get assets/faculty/[string faculty]() returns Asset[] {
         io:println("Getting assets for faculty: ", faculty);
         Asset[] facultyAssets = [];
@@ -169,7 +168,7 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    // Update an asset - PUT /assets/{assetTag}
+    // Update an asset
     resource function put assets/[string assetTag](@http:Payload json payload) 
             returns http:Ok|http:NotFound|http:BadRequest {
         io:println("Updating asset: ", assetTag);
@@ -188,7 +187,7 @@ service / on new http:Listener(9090) {
         return http:OK;
     }
 
-    // Delete an asset - DELETE /assets/{assetTag}
+    // Remove an asset
     resource function delete assets/[string assetTag]() returns http:Ok|http:NotFound {
         io:println("Deleting asset: ", assetTag);
         if !assetsDB.hasKey(assetTag) {
