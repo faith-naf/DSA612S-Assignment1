@@ -59,13 +59,13 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    // Get all assets
+    // view all assets
     resource function get assets() returns json {
         io:println("Getting all assets");
         return <json>assetsDB.toArray();
     }
 
-    // Get asset by tag
+    // view asset by tag
     resource function get assets/[string assetTag]() returns json|http:NotFound {
         io:println("Getting asset: ", assetTag);
         if !assetsDB.hasKey(assetTag) {
