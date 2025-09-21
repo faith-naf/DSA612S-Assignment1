@@ -36,7 +36,7 @@ public function main() returns error? {
     testOperation(assetClient, "1. Create asset", "POST /assets", newAsset);
     testOperation(assetClient, "2. Get all assets", "GET /assets", ());
     testOperation(assetClient, "3. Get asset by tag", "GET /assets/EQ-002", ());
-    testOperation(assetClient, "4. Get by faculty", "GET /assets/faculty/Engineering", ());
+    testOperation(assetClient, "4. Get by faculty", "GET /assets/faculty/Software Engineering", ());
     testOperation(assetClient, "5. Check overdue", "GET /assets/maintenance/overdue", ());
     testOperation(assetClient, "6. Add component", "POST /assets/EQ-002/components", newComponent);
     testOperation(assetClient, "7. Add schedule", "POST /assets/EQ-002/schedules", newSchedule);
