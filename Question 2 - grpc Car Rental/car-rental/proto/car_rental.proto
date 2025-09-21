@@ -1,0 +1,115 @@
+syntax = "proto3";
+package carrental;
+
+// Simple enums
+enum CarStatus {
+  UNKNOWN = 0;
+  AVAILABLE = 1;
+  UNAVAILABLE = 2;
+}
+
+// Core messages
+message Car {
+  string plate = 1;
+  string make = 2;
+  string model = 3;
+  int32 year = 4;
+  double daily_price = 5;
+  int32 mileage = 6;
+  CarStatus status = 7;
+}
+
+message AddCarRequest {
+  Car car = 1;
+}
+message AddCarResponse {
+  string plate = 1;
+  bool ok = 2;
+  string message = 3;
+}
+
+message CreateUser {
+  string id = 1;
+  string name = 2;
+  string role = 3; // "customer" or "admin"
+}
+message CreateUsersResponse {
+  int32 created_count = 1;
+}
+
+message UpdateCarRequest {
+  string plate = 1;
+  Car car = 2;
+}
+message UpdateCarResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message RemoveCarRequest {
+  string plate = 1;
+}
+message ListCarsResponse {
+  repeated Car cars = 1;
+}
+
+message ListAvailableCarsRequest {
+  string filter = 1; // optional filter text (make/model/year)
+}
+
+message SearchCarRequest {
+  string plate = 1;
+}
+message SearchCarResponse {
+  Car car = 1;
+  bool available = 2;
+  string message = 3;
+}
+
+message AddToCartRequest {
+  string user_id = 1;
+  string plate = 2;
+  string start_date = 3; // ISO yyyy-mm-dd (simple string)
+  string end_date = 4;
+}
+message AddToCartResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message CarItem {
+  string plate = 1;
+  string start_date = 2;
+  string end_date = 3;
+  double price = 4;
+}
+
+message Reservation {
+  string reservation_id = 1;
+  string user_id = 2;
+  repeated CarItem items = 3;
+  double total_price = 4;
+  string placed_at = 5; // ISO datetime string
+}
+message PlaceReservationRequest {
+  string user_id = 1;
+}
+message PlaceReservationResponse {
+  bool ok = 1;
+  Reservation reservation = 2;
+  string message = 3;
+}
+
+// Service
+service CarRental {
+  rpc addCar (AddCarRequest) returns (AddCarResponse);
+  // client streaming: client streams users -> server returns created count
+  rpc createUsers (stream CreateUser) returns (CreateUsersResponse);
+  rpc updateCar (UpdateCarRequest) returns (UpdateCarResponse);
+  rpc removeCar (RemoveCarRequest) returns (ListCarsResponse);
+  // server streaming: server streams Car messages back
+  rpc listAvailableCars (ListAvailableCarsRequest) returns (stream Car);
+  rpc searchCar (SearchCarRequest) returns (SearchCarResponse);
+  rpc addToCart (AddToCartRequest) returns (AddToCartResponse);
+  rpc placeReservation (PlaceReservationRequest) returns (PlaceReservationResponse);
+}

@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Ballerina Server",
+      "type": "shell",
+      "command": "bal run src/assets_service.bal",
+      "presentation": {
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Ballerina Client (demo)",
+      "type": "shell",
+      "command": "bal run src/assets_client.bal",
+      "presentation": {
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}

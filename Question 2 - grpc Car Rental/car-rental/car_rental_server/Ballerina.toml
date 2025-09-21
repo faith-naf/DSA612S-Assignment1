@@ -1,0 +1,12 @@
+[package]
+org = "nafta"
+name = "car_rental_server"
+version = "0.1.0"
+distribution = "2201.12.9"
+
+[build-options]
+observabilityIncluded = true
+
+
+[[module]]
+name= "car_rental_server"

@@ -1,0 +1,4 @@
+import ballerina/grpc;
+import ballerina/protobuf;
+public const string CAR_RENTAL_DESC = "0A1670726F746F2F6361725F72656E74616C2E70726F746F";
+
