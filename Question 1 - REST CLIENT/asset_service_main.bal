@@ -7,7 +7,7 @@ type Status "ACTIVE"|"UNDER_REPAIR"|"DISPOSED";
 type Component record {
     string id;
     string name;
-    string description?;
+    string description?;  
 };
 
 type MaintenanceSchedule record {
