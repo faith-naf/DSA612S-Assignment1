@@ -55,7 +55,7 @@ public function main() returns error? {
     check testOperation(assetClient, "7. Add schedule", "POST /assets/EQ-002/schedules", newSchedule);
     check testOperation(assetClient, "8. Update asset", "PUT /assets/EQ-002", updatedAsset);
 
-    io:println("=== All tests completed successfully ===");
+    io:println("All tests completed successfully");
 }
 
 function testOperation(http:Client client, string description, string operation, json payload) returns error? {
