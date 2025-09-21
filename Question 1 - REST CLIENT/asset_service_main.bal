@@ -141,7 +141,7 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    // Add maintenance schedule to an asset - POST /assets/{assetTag}/schedules
+    // Add maintenance schedule to an asset - POST /assets/{assetTag}/schedules 
     resource function post assets/[string assetTag]/schedules(@http:Payload json payload) 
             returns http:Created|http:NotFound|http:BadRequest {
         io:println("Adding schedule to asset: ", assetTag);
@@ -208,7 +208,7 @@ service / on new http:Listener(9090) {
         }
         
         WorkOrder|error workOrder = payload.cloneWithType(WorkOrder);
-        if workOrder is error {
+        if workOrder is error { 
             io:println("Error creating work order: ", workOrder.message());
             return http:BAD_REQUEST;
         }
