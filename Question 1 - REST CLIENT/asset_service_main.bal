@@ -89,7 +89,7 @@ service / on new http:Listener(9090) {
         return facultyAssets;
     }
 
-    // Check for overdue maintenance items - GET /assets/maintenance/overdue
+    // Check for overdue maintenance items
     resource function get assets/maintenance/overdue() returns Asset[] {
         io:println("Checking for overdue maintenance");
         time:Utc currentTime = time:utcNow();
@@ -114,7 +114,7 @@ service / on new http:Listener(9090) {
         return overdueAssets;
     }
 
-    // Add component to an asset - POST /assets/{assetTag}/components
+    // Add component to an asset
     resource function post assets/[string assetTag]/components(@http:Payload json payload)
             returns http:Created|http:NotFound|http:BadRequest {
         io:println("Adding component to asset: ", assetTag);
@@ -141,7 +141,7 @@ service / on new http:Listener(9090) {
         return http:CREATED;
     }
 
-    // Add maintenance schedule to an asset - POST /assets/{assetTag}/schedules 
+    // Add maintenance schedule to an asset
     resource function post assets/[string assetTag]/schedules(@http:Payload json payload) 
             returns http:Created|http:NotFound|http:BadRequest {
         io:println("Adding schedule to asset: ", assetTag);
@@ -199,7 +199,7 @@ service / on new http:Listener(9090) {
         return http:OK;
     }
 
-    // Add work order to an asset - POST /assets/{assetTag}/workorders
+    // Add work order to an asset
     resource function post assets/[string assetTag]/workorders(@http:Payload json payload)
             returns http:Created|http:NotFound|http:BadRequest {
         io:println("Adding work order to asset: ", assetTag);
